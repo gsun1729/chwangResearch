@@ -94,20 +94,33 @@ class filedialogdemo(QWidget):
         self.setLayout(self.one)
         self.button.setStyleSheet(QPushButton_style)
         
+        #showing a dog image using plot
+        self.plot = pg.PlotWidget()      
+        image = cv2.imread('C:\cygwin64\home\chrhw\Chaos\dog.tif')
+        rotatedimage = np.transpose(image, (1, 0, 2))
+        rotatedimage = np.flip(rotatedimage)
+        rotatedimage = np.flip(rotatedimage, 0)
+        imageadded = pg.ImageItem(rotatedimage)
+        self.plot.addItem(imageadded)
+        self.plot.hideAxis('left')
+        self.plot.hideAxis('bottom')
+        self.one.addWidget(self.plot)
+        
     def getfile(self):
+        #grabbing filename, user's wanted image
         filename = QtGui.QFileDialog.getOpenFileName(self, 'Open Image',
             'c:\\', "Image files (*.tif)")
         name = filename[0]
+        
+        #updating the image on interface to user's choice
         self.userimage = pg.PlotWidget()
-        foundimage = cv2.imread(name)        
+        foundimage = cv2.imread(name)
         rotated = np.transpose(foundimage, (1, 0, 2))
         rotated = np.flip(rotated)
         rotated = np.flip(rotated, 0)
         imagetoadd = pg.ImageItem(rotated)
-        self.userimage.addItem(imagetoadd)
-        self.userimage.hideAxis('left')
-        self.userimage.hideAxis('bottom')
-        self.one.addWidget(self.userimage)
+        self.plot.clear()
+        self.plot.addItem(imagetoadd)
 
 class Widget(QWidget):
     def __init__(self, app, parent=None):
@@ -119,20 +132,7 @@ class Widget(QWidget):
         
         #adding controls class to graphics window
         self.horizontalLayout = QHBoxLayout(self)
-        self.horizontalLayout.addWidget(filedialogdemo(parent=self))
-        
-        #showing a dog image using plot
-        self.plot = pg.PlotWidget()      
-        image = cv2.imread('C:\cygwin64\home\chrhw\Chaos\dog.tif')
-        rotatedimage = np.transpose(image, (1, 0, 2))
-        rotatedimage = np.flip(rotatedimage)
-        rotatedimage = np.flip(rotatedimage, 0)
-        imageadded = pg.ImageItem(rotatedimage)
-        self.plot.addItem(imageadded)
-        self.plot.hideAxis('left')
-        self.plot.hideAxis('bottom')
-        self.horizontalLayout.addWidget(self.plot)
-        
+        self.horizontalLayout.addWidget(filedialogdemo(parent=self))        
         
 if __name__ == '__main__':
     app = QApplication(sys.argv)
