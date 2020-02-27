@@ -81,26 +81,34 @@ QCheckBox{{
     padding:5px;
 }}
 """
-class filedialogdemo(QWidget):
+currentimage = cv2.imread('C:\cygwin64\home\chrhw\Chaos\dog.tif')
+
+class filedialog(QWidget):
     def __init__(self, parent=None):
-        super(filedialogdemo, self).__init__(parent=parent)
+        super(filedialog, self).__init__(parent=parent)
         
         #setting up a QFileDialog
         self.one = QVBoxLayout(self)
         self.one.setAlignment(Qt.AlignTop)
         self.button = QtWidgets.QPushButton("Click to open a new tif image")
+        self.button2 = QtWidgets.QPushButton("Click to transform image and save")
         self.button.clicked.connect(self.getfile)
+        self.button2.clicked.connect(self.transformfile)
         self.one.addWidget(self.button)
+        self.one.addWidget(self.button2)
         self.setLayout(self.one)
         self.button.setStyleSheet(QPushButton_style)
+        self.button2.setStyleSheet(QPushButton_style)
         
         #showing a dog image using plot
-        self.plot = pg.PlotWidget()      
+        self.plot = pg.PlotWidget()
         image = cv2.imread('C:\cygwin64\home\chrhw\Chaos\dog.tif')
-        rotatedimage = np.transpose(image, (1, 0, 2))
-        rotatedimage = np.flip(rotatedimage)
-        rotatedimage = np.flip(rotatedimage, 0)
-        imageadded = pg.ImageItem(rotatedimage)
+        rotated = np.transpose(image, (1, 0, 2))
+        rotated = np.flip(rotated)
+        rotated = np.flip(rotated, 0)
+        global currentimage
+        currentimage = rotated
+        imageadded = pg.ImageItem(rotated)
         self.plot.addItem(imageadded)
         self.plot.hideAxis('left')
         self.plot.hideAxis('bottom')
@@ -114,14 +122,31 @@ class filedialogdemo(QWidget):
         
         #updating the image on interface to user's choice
         self.userimage = pg.PlotWidget()
-        foundimage = cv2.imread(name)
-        rotated = np.transpose(foundimage, (1, 0, 2))
-        rotated = np.flip(rotated)
-        rotated = np.flip(rotated, 0)
-        imagetoadd = pg.ImageItem(rotated)
+        image1 = cv2.imread(name)
+        rotated1 = np.transpose(image1, (1, 0, 2))
+        rotated1 = np.flip(rotated1)
+        rotated1 = np.flip(rotated1, 0)
+        global currentimage
+        currentimage = rotated1
+        imageadded1 = pg.ImageItem(rotated1)
         self.plot.clear()
-        self.plot.addItem(imagetoadd)
-
+        self.plot.addItem(imageadded1)
+     
+    def transformfile(self):
+        #making change to user's image
+        global currentimage
+        rotated2 = np.flip(currentimage)
+        currentimage = rotated2
+        imageadded2 = pg.ImageItem(rotated2)
+        self.plot.clear()
+        self.plot.addItem(imageadded2)
+        
+        #saving changed image
+        filename1 = QtGui.QFileDialog.getSaveFileName(self,"QFileDialog.getSaveFileName()",
+            'c:\\', "Tif Files (*.tif)")
+        name1 = filename1[0]
+        cv2.imwrite(name1, currentimage)
+      
 class Widget(QWidget):
     def __init__(self, app, parent=None):
         super(Widget, self).__init__(parent=parent)
@@ -130,9 +155,9 @@ class Widget(QWidget):
         self.setStyleSheet(f"Widget {{ background-color: {colors['dark']}; }}")
         self.setWindowTitle("Change the Picture!")
         
-        #adding controls class to graphics window
+        #adding filedialog class to graphics window
         self.horizontalLayout = QHBoxLayout(self)
-        self.horizontalLayout.addWidget(filedialogdemo(parent=self))        
+        self.horizontalLayout.addWidget(filedialog(parent=self))        
         
 if __name__ == '__main__':
     app = QApplication(sys.argv)
