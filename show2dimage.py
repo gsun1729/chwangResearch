@@ -22,6 +22,7 @@ import sys
 from time import time
 import types
 import cv2
+import os
 
 colors =  {
             'lightest':"#eeeeee",
@@ -91,14 +92,18 @@ class filedialog(QWidget):
         self.one = QVBoxLayout(self)
         self.one.setAlignment(Qt.AlignTop)
         self.button = QtWidgets.QPushButton("Click to open a new tif image")
-        self.button2 = QtWidgets.QPushButton("Click to transform image and save")
+        self.button2 = QtWidgets.QPushButton("Click to transform shown image and save")
+        self.button3 = QtWidgets.QPushButton("Click to transform a whole directory")
         self.button.clicked.connect(self.getfile)
         self.button2.clicked.connect(self.transformfile)
+        self.button3.clicked.connect(self.transformdir)
         self.one.addWidget(self.button)
         self.one.addWidget(self.button2)
+        self.one.addWidget(self.button3)
         self.setLayout(self.one)
         self.button.setStyleSheet(QPushButton_style)
         self.button2.setStyleSheet(QPushButton_style)
+        self.button3.setStyleSheet(QPushButton_style)
         
         #showing a dog image using plot
         self.plot = pg.PlotWidget()
@@ -115,6 +120,7 @@ class filedialog(QWidget):
         self.one.addWidget(self.plot)
         
     def getfile(self):
+    
         #grabbing filename, user's wanted image
         filename = QtGui.QFileDialog.getOpenFileName(self, 'Open Image',
             'c:\\', "Image files (*.tif)")
@@ -133,6 +139,7 @@ class filedialog(QWidget):
         self.plot.addItem(imageadded1)
      
     def transformfile(self):
+    
         #making change to user's image
         global currentimage
         rotated2 = np.flip(currentimage)
@@ -142,11 +149,51 @@ class filedialog(QWidget):
         self.plot.addItem(imageadded2)
         
         #saving changed image
-        filename1 = QtGui.QFileDialog.getSaveFileName(self,"QFileDialog.getSaveFileName()",
+        filename1 = QtGui.QFileDialog.getSaveFileName(self, "Save Image",
             'c:\\', "Tif Files (*.tif)")
         name1 = filename1[0]
         cv2.imwrite(name1, currentimage)
-      
+        
+    def transformdir(self):
+    
+        #clearing plot image to show original dog
+        image3 = cv2.imread('C:\cygwin64\home\chrhw\Chaos\dog.tif')
+        rotated3 = np.transpose(image3, (1, 0, 2))
+        rotated3 = np.flip(rotated3)
+        rotated3 = np.flip(rotated3, 0)
+        global currentimage
+        currentimage = rotated3
+        imageadded3 = pg.ImageItem(rotated3)
+        self.plot.clear()
+        self.plot.addItem(imageadded3)
+        
+        #grabbing directory from user choice
+        dirname = QtGui.QFileDialog.getExistingDirectory(self, "Open Directory",
+            'c:\\')
+        
+        #transforming all tif images in directory
+        
+        image_list = self.getFilenames(dirname)
+        for i in image_list:
+            newname = i[:-4] + '_transformed.tif'
+            imagei = cv2.imread(i)
+            rotatedi = np.transpose(imagei, (1, 0, 2))
+            rotatedi = np.flip(rotatedi)
+            rotatedi = np.flip(rotatedi, 0)
+            rotatedi = np.flip(imagei)
+            cv2.imwrite(newname, rotatedi)
+        
+    def getFilenames(self, root_directory, suffix = '.tif'):
+        img_filelist = []
+        for current_location, sub_directories, files in os.walk(root_directory):
+            if files:
+                for img_file in files:
+                    if (suffix.lower() in img_file.lower()) and '_thumb_' not in img_file:
+                        img_filelist.append(os.path.join(current_location, img_file))
+        img_filelist.sort()
+
+        return img_filelist
+        
 class Widget(QWidget):
     def __init__(self, app, parent=None):
         super(Widget, self).__init__(parent=parent)
