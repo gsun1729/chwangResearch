@@ -2,7 +2,12 @@
     Written by Christine Hwang, chwang14@jhu.edu
     Created on 20200206
     
-    This code shows a 2D image on an interface.
+    This code allows the viewing of tif images on an interface
+    and provides the user with the following three interactive choices.
+    
+    1. Open up a different tif image.
+    2. Transform the tif image seen and save the transformed image.
+    3. Transform a whole directory of tif images and save the transformed images.
 """
 
 from PyQt5.QtCore import Qt
@@ -24,6 +29,7 @@ import types
 import cv2
 import os
 
+
 colors =  {
             'lightest':"#eeeeee",
             'lighter':"#e5e5e5",
@@ -38,7 +44,7 @@ colors =  {
 numlabelsize = 22
 txtlabelsize = 20
 
-# STYLING
+#styling
 numfont = QtGui.QFont("Avenir Next") # requires macos
 numfont.setPixelSize(numlabelsize)
 
@@ -106,8 +112,9 @@ class filedialog(QWidget):
         self.button3.setStyleSheet(QPushButton_style)
         
         #showing a dog image using plot
+        #check file location when using this code on different computer!!
         self.plot = pg.PlotWidget()
-        image = cv2.imread('C:\cygwin64\home\chrhw\Chaos\dog.tif')
+        image = cv2.imread('C:\cygwin64\home\chrhw\Research\dog.tif')
         rotated = np.transpose(image, (1, 0, 2))
         rotated = np.flip(rotated)
         rotated = np.flip(rotated, 0)
@@ -141,6 +148,7 @@ class filedialog(QWidget):
     def transformfile(self):
     
         #making change to user's image
+        #change later
         global currentimage
         rotated2 = np.flip(currentimage)
         currentimage = rotated2
@@ -157,7 +165,7 @@ class filedialog(QWidget):
     def transformdir(self):
     
         #clearing plot image to show original dog
-        image3 = cv2.imread('C:\cygwin64\home\chrhw\Chaos\dog.tif')
+        image3 = cv2.imread('C:\cygwin64\home\chrhw\Research\dog.tif')
         rotated3 = np.transpose(image3, (1, 0, 2))
         rotated3 = np.flip(rotated3)
         rotated3 = np.flip(rotated3, 0)
