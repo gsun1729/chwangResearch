@@ -61,4 +61,3 @@ def rewritefile(filename3):
     
     #opening file
     volumedata = pd.read_csv(filename3, header = 2)
-    print(volumedata.head())
