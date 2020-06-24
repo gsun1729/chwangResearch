@@ -25,11 +25,16 @@ def convertID(filename1, filename2):
         Csv file name ending with "_newIds.csv"
     filename2 : (string)
         Csv file name ending with "_connections.csv"
+        
+    Outputs
+    ===========
+    Writes a csv file, name ending with "_connections_newId.csv", to disk
+    No returns
     '''
     
     #grabbing base name for files
-    basename = os.path.basename(filename2)
-    wfile = basename[:-4] + '_newId.csv'
+    basename, extension = os.path.splitext(filename2)
+    wfile = basename + '_newId.csv'
     
     #opening appropriate files
     newIdsdata = pd.read_csv(filename1, names=['Old ID'])
@@ -47,6 +52,8 @@ def convertID(filename1, filename2):
     #writing output csv file with new name, changed data
     connectionsdata.to_csv(wfile, index = False, header = False)
     
+convertID('C:\cygwin64\home\chrhw\Research\Practice\MTSmCh008y001_newIds.csv', 'C:\cygwin64\home\chrhw\Research\Practice\MTSmCh008y001_connections.csv')
+
 def rewritefile(filename3):
     '''
     This function reads in a csv file with the following end tags:
@@ -57,6 +64,10 @@ def rewritefile(filename3):
     ===========
     filename3 : (string)
         Csv file name ending with "_Volume.csv"
+        
+    Outpus
+    ===========
+    No returns
     '''
     
     #opening file
