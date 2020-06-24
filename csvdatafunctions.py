@@ -40,7 +40,7 @@ def convertID(filename1, filename2):
     newIdsdata = pd.read_csv(filename1, names=['Old ID'])
     connectionsdata = pd.read_csv(filename2, names=['ID1', 'ID2'])
     
-    #grabbing row number and column number of connectionsdata
+    #grabbing row number of connectionsdata
     rownum = connectionsdata.shape[0]
 
     #converting new ID format to old
@@ -52,7 +52,6 @@ def convertID(filename1, filename2):
     #writing output csv file with new name, changed data
     connectionsdata.to_csv(wfile, index = False, header = False)
     
-convertID('C:\cygwin64\home\chrhw\Research\Practice\MTSmCh008y001_newIds.csv', 'C:\cygwin64\home\chrhw\Research\Practice\MTSmCh008y001_connections.csv')
 
 def rewritefile(filename3):
     '''
