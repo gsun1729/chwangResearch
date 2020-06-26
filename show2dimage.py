@@ -88,7 +88,7 @@ QCheckBox{{
     padding:5px;
 }}
 """
-currentimage = cv2.imread('C:\cygwin64\home\chrhw\Chaos\dog.tif')
+currentImage = cv2.imread('C:\cygwin64\home\chrhw\Research\dog.tif')
 
 class filedialog(QWidget):
     def __init__(self, parent=None):
@@ -97,101 +97,106 @@ class filedialog(QWidget):
         #setting up a QFileDialog
         self.one = QVBoxLayout(self)
         self.one.setAlignment(Qt.AlignTop)
-        self.button = QtWidgets.QPushButton("Click to open a new tif image")
-        self.button2 = QtWidgets.QPushButton("Click to transform shown image and save")
-        self.button3 = QtWidgets.QPushButton("Click to transform a whole directory")
-        self.button.clicked.connect(self.getfile)
-        self.button2.clicked.connect(self.transformfile)
-        self.button3.clicked.connect(self.transformdir)
-        self.one.addWidget(self.button)
-        self.one.addWidget(self.button2)
-        self.one.addWidget(self.button3)
+        self.buttonOpen = QtWidgets.QPushButton("Click to open a new tif image")
+        self.buttonTransform = QtWidgets.QPushButton("Click to transform shown image and save")
+        self.buttonDirTransform = QtWidgets.QPushButton("Click to transform a whole directory")
+        self.buttonOpen.clicked.connect(self.getFile)
+        self.buttonTransform.clicked.connect(self.transformFile)
+        self.buttonDirTransform.clicked.connect(self.transformDir)
+        self.one.addWidget(self.buttonOpen)
+        self.one.addWidget(self.buttonTransform)
+        self.one.addWidget(self.buttonDirTransform)
         self.setLayout(self.one)
-        self.button.setStyleSheet(QPushButton_style)
-        self.button2.setStyleSheet(QPushButton_style)
-        self.button3.setStyleSheet(QPushButton_style)
+        self.buttonOpen.setStyleSheet(QPushButton_style)
+        self.buttonTransform.setStyleSheet(QPushButton_style)
+        self.buttonDirTransform.setStyleSheet(QPushButton_style)
         
         #showing a dog image using plot
         #check file location when using this code on different computer!!
         self.plot = pg.PlotWidget()
-        image = cv2.imread('C:\cygwin64\home\chrhw\Research\dog.tif')
-        rotated = np.transpose(image, (1, 0, 2))
-        rotated = np.flip(rotated)
-        rotated = np.flip(rotated, 0)
-        global currentimage
-        currentimage = rotated
-        imageadded = pg.ImageItem(rotated)
-        self.plot.addItem(imageadded)
+        dogImage = cv2.imread('C:\cygwin64\home\chrhw\Research\dog.tif')
+        rotatedDog = np.transpose(dogImage, (1, 0, 2))
+        rotatedDog = np.flip(rotatedDog)
+        rotatedDog = np.flip(rotatedDog, 0)
+        global currentImage
+        currentImage = rotatedDog
+        imageAdded = pg.ImageItem(rotatedDog)
+        self.plot.addItem(imageAdded)
         self.plot.hideAxis('left')
         self.plot.hideAxis('bottom')
         self.one.addWidget(self.plot)
         
-    def getfile(self):
+    def getFile(self):
     
-        #grabbing filename, user's wanted image
-        filename = QtGui.QFileDialog.getOpenFileName(self, 'Open Image',
+        #grabbing file name of user's wanted image
+        openFile = QtGui.QFileDialog.getOpenFileName(self, 'Open Image',
             'c:\\', "Image files (*.tif)")
-        name = filename[0]
+        openImage = openFile[0]
         
         #updating the image on interface to user's choice
-        self.userimage = pg.PlotWidget()
-        image1 = cv2.imread(name)
-        rotated1 = np.transpose(image1, (1, 0, 2))
-        rotated1 = np.flip(rotated1)
-        rotated1 = np.flip(rotated1, 0)
-        global currentimage
-        currentimage = rotated1
-        imageadded1 = pg.ImageItem(rotated1)
+        self.userImage = pg.PlotWidget()
+        userImage = cv2.imread(openImage)
+        rotatedUser = np.transpose(userImage, (1, 0, 2))
+        rotatedUser = np.flip(rotatedUser)
+        rotatedUser = np.flip(rotatedUser, 0)
+        global currentImage
+        currentImage = rotatedUser
+        imageAdded1 = pg.ImageItem(rotatedUser)
         self.plot.clear()
-        self.plot.addItem(imageadded1)
+        self.plot.addItem(imageAdded1)
      
-    def transformfile(self):
+    def transformFile(self):
     
         #making change to user's image
         #change later
-        global currentimage
-        rotated2 = np.flip(currentimage)
-        currentimage = rotated2
-        imageadded2 = pg.ImageItem(rotated2)
+        global currentImage
+        rotatedUser1 = np.flip(currentImage)
+        currentImage = rotatedUser1
+        
+        #showing changed user's image
+        rotatedUser1 = np.transpose(rotatedUser1, (1, 0, 2))
+        rotatedUser1 = np.flip(rotatedUser1)
+        rotatedUser1 = np.flip(rotatedUser1, 0)
+        imageAdded2 = pg.ImageItem(rotatedUser1)
         self.plot.clear()
-        self.plot.addItem(imageadded2)
+        self.plot.addItem(imageAdded2)
         
         #saving changed image
-        filename1 = QtGui.QFileDialog.getSaveFileName(self, "Save Image",
+        saveFile = QtGui.QFileDialog.getSaveFileName(self, "Save Image",
             'c:\\', "Tif Files (*.tif)")
-        name1 = filename1[0]
-        cv2.imwrite(name1, currentimage)
+        saveImage = saveFile[0]
+        cv2.imwrite(saveImage, currentImage)
         
-    def transformdir(self):
+    def transformDir(self):
     
         #clearing plot image to show original dog
-        image3 = cv2.imread('C:\cygwin64\home\chrhw\Research\dog.tif')
-        rotated3 = np.transpose(image3, (1, 0, 2))
-        rotated3 = np.flip(rotated3)
-        rotated3 = np.flip(rotated3, 0)
-        global currentimage
-        currentimage = rotated3
-        imageadded3 = pg.ImageItem(rotated3)
+        dogImage = cv2.imread('C:\cygwin64\home\chrhw\Research\dog.tif')
+        rotatedDog = np.transpose(dogImage, (1, 0, 2))
+        rotatedDog = np.flip(rotatedDog)
+        rotatedDog = np.flip(rotatedDog, 0)
+        global currentImage
+        currentImage = rotatedDog
+        imageAdded3 = pg.ImageItem(rotatedDog)
         self.plot.clear()
-        self.plot.addItem(imageadded3)
+        self.plot.addItem(imageAdded3)
         
         #grabbing directory from user choice
-        dirname = QtGui.QFileDialog.getExistingDirectory(self, "Open Directory",
+        dirName = QtGui.QFileDialog.getExistingDirectory(self, "Open Directory",
             'c:\\')
         
         #transforming all tif images in directory
         
-        image_list = self.getFilenames(dirname)
+        image_list = self.getFileNames(dirName)
         for i in image_list:
-            newname = i[:-4] + '_transformed.tif'
+            newName = i[:-4] + '_transformed.tif'
             imagei = cv2.imread(i)
             rotatedi = np.transpose(imagei, (1, 0, 2))
             rotatedi = np.flip(rotatedi)
             rotatedi = np.flip(rotatedi, 0)
-            rotatedi = np.flip(imagei)
-            cv2.imwrite(newname, rotatedi)
+            newi = np.flip(rotatedi)
+            cv2.imwrite(newName, newi)
         
-    def getFilenames(self, root_directory, suffix = '.tif'):
+    def getFileNames(self, root_directory, suffix = '.tif'):
         img_filelist = []
         for current_location, sub_directories, files in os.walk(root_directory):
             if files:

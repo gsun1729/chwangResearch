@@ -10,7 +10,7 @@
 import pandas as pd
 import os
 
-def convertID(filename1, filename2):
+def convertID(fileName1, fileName2):
     '''
     This function reads in two csv files with the following end tags:
         1. "_newIds.csv"
@@ -21,9 +21,9 @@ def convertID(filename1, filename2):
     
     Parameters
     ===========
-    filename1 : (string)
+    fileName1 : (string)
         Csv file name ending with "_newIds.csv"
-    filename2 : (string)
+    fileName2 : (string)
         Csv file name ending with "_connections.csv"
         
     Outputs
@@ -33,27 +33,29 @@ def convertID(filename1, filename2):
     '''
     
     #grabbing base name for files
-    basename, extension = os.path.splitext(filename2)
-    wfile = basename + '_newId.csv'
+    baseName, extension = os.path.splitext(fileName2)
+    
+    #making output csv file new name
+    wFile = baseName + '_newId.csv'
     
     #opening appropriate files
-    newIdsdata = pd.read_csv(filename1, names=['Old ID'])
-    connectionsdata = pd.read_csv(filename2, names=['ID1', 'ID2'])
+    newIdsData = pd.read_csv(fileName1, names=['Old ID'])
+    connectionsData = pd.read_csv(fileName2, names=['ID1', 'ID2'])
     
-    #grabbing row number of connectionsdata
-    rownum = connectionsdata.shape[0]
+    #grabbing row number of connectionsData
+    connectionRow = connectionsData.shape[0]
 
     #converting new ID format to old
-    zerois = newIdsdata.iloc[0]
-    for i in range(rownum):
-        connectionsdata.at[i, 'ID1'] = connectionsdata.at[i, 'ID1'] + zerois
-        connectionsdata.at[i, 'ID2'] = connectionsdata.at[i, 'ID2'] + zerois
+    firstId = newIdsData.iloc[0]
+    for i in range(connectionRow):
+        connectionsData.at[i, 'ID1'] = connectionsData.at[i, 'ID1'] + firstId
+        connectionsData.at[i, 'ID2'] = connectionsData.at[i, 'ID2'] + firstId
     
     #writing output csv file with new name, changed data
-    connectionsdata.to_csv(wfile, index = False, header = False)
+    connectionsdata.to_csv(wFile, index = False, header = False)
     
 
-def rewritefile(filename3):
+def rewritefile(volumeFile):
     '''
     This function reads in a csv file with the following end tags:
         1. "_Volume"
@@ -61,7 +63,7 @@ def rewritefile(filename3):
     
     Parameters
     ===========
-    filename3 : (string)
+    volumeFile : (string)
         Csv file name ending with "_Volume.csv"
         
     Outpus
@@ -70,4 +72,4 @@ def rewritefile(filename3):
     '''
     
     #opening file
-    volumedata = pd.read_csv(filename3, header = 2)
+    volumeData = pd.read_csv(volumeFile, header = 2)
