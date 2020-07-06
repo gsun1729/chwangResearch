@@ -16,7 +16,11 @@ from PyQt5.QtWidgets import (QApplication, QHBoxLayout,
                              QVBoxLayout, QWidget)
 
 from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt5.QtGui import QPixmap
 import pyqtgraph as pg
+
+
+import matplotlib.pyplot as plt
 
 from numba import jit, prange, njit
 import numpy as np
@@ -26,8 +30,10 @@ import sys
 
 from time import time
 import types
-import cv2
 import os
+from skimage import io
+import scipy.io
+from scipy.stats import iqr
 
 
 colors =  {
@@ -88,7 +94,7 @@ QCheckBox{{
     padding:5px;
 }}
 """
-currentImage = cv2.imread('C:\cygwin64\home\chrhw\Research\dog.tif')
+currentImage = io.imread('C:\cygwin64\home\chrhw\Research\dog.tif')
 
 class filedialog(QWidget):
     def __init__(self, parent=None):
@@ -113,18 +119,16 @@ class filedialog(QWidget):
         
         #showing a dog image using plot
         #check file location when using this code on different computer!!
-        self.plot = pg.PlotWidget()
-        dogImage = cv2.imread('C:\cygwin64\home\chrhw\Research\dog.tif')
+        dogImage = io.imread('C:\cygwin64\home\chrhw\Research\dog.tif')
         rotatedDog = np.transpose(dogImage, (1, 0, 2))
-        rotatedDog = np.flip(rotatedDog)
-        rotatedDog = np.flip(rotatedDog, 0)
+        rotatedDog = np.flip(rotatedDog, 1)
         global currentImage
         currentImage = rotatedDog
-        imageAdded = pg.ImageItem(rotatedDog)
-        self.plot.addItem(imageAdded)
-        self.plot.hideAxis('left')
-        self.plot.hideAxis('bottom')
-        self.one.addWidget(self.plot)
+        self.labels = QLabel(self)
+        imageAdded = QPixmap('C:\cygwin64\home\chrhw\Research\dog.tif')
+        self.labels.setPixmap(imageAdded)
+        self.one.addWidget(self.labels)
+
         
     def getFile(self):
     
@@ -134,67 +138,58 @@ class filedialog(QWidget):
         openImage = openFile[0]
         
         #updating the image on interface to user's choice
-        self.userImage = pg.PlotWidget()
-        userImage = cv2.imread(openImage)
+        userImage = io.imread(openImage)
         rotatedUser = np.transpose(userImage, (1, 0, 2))
-        rotatedUser = np.flip(rotatedUser)
-        rotatedUser = np.flip(rotatedUser, 0)
+        rotatedUser = np.flip(rotatedUser, 1)
         global currentImage
         currentImage = rotatedUser
-        imageAdded1 = pg.ImageItem(rotatedUser)
-        self.plot.clear()
-        self.plot.addItem(imageAdded1)
+        imageAdded1 = QPixmap(openImage)
+        self.labels.setPixmap(imageAdded1)
      
     def transformFile(self):
     
         #making change to user's image
         #change later
         global currentImage
-        rotatedUser1 = np.flip(currentImage)
+        rotatedUser1 = np.flip(currentImage, 1)
         currentImage = rotatedUser1
-        
-        #showing changed user's image
-        rotatedUser1 = np.transpose(rotatedUser1, (1, 0, 2))
-        rotatedUser1 = np.flip(rotatedUser1)
-        rotatedUser1 = np.flip(rotatedUser1, 0)
-        imageAdded2 = pg.ImageItem(rotatedUser1)
-        self.plot.clear()
-        self.plot.addItem(imageAdded2)
         
         #saving changed image
         saveFile = QtGui.QFileDialog.getSaveFileName(self, "Save Image",
             'c:\\', "Tif Files (*.tif)")
         saveImage = saveFile[0]
-        cv2.imwrite(saveImage, currentImage)
+        io.imsave(saveImage, currentImage)
+        
+        #showing changed user's image
+        rotatedUser1 = np.transpose(rotatedUser1, (1, 0, 2))
+        rotatedUser1 = np.flip(rotatedUser1, 1)
+        imageAdded2 = QPixmap(saveImage)
+        self.labels.setPixmap(imageAdded2)
         
     def transformDir(self):
     
         #clearing plot image to show original dog
-        dogImage = cv2.imread('C:\cygwin64\home\chrhw\Research\dog.tif')
+        dogImage = io.imread('C:\cygwin64\home\chrhw\Research\dog.tif')
         rotatedDog = np.transpose(dogImage, (1, 0, 2))
-        rotatedDog = np.flip(rotatedDog)
-        rotatedDog = np.flip(rotatedDog, 0)
+        rotatedDog = np.flip(rotatedDog, 1)
         global currentImage
         currentImage = rotatedDog
-        imageAdded3 = pg.ImageItem(rotatedDog)
-        self.plot.clear()
-        self.plot.addItem(imageAdded3)
+        imageAdded3 = QPixmap('C:\cygwin64\home\chrhw\Research\dog.tif')
+        self.labels.setPixmap(imageAdded3)
         
         #grabbing directory from user choice
         dirName = QtGui.QFileDialog.getExistingDirectory(self, "Open Directory",
             'c:\\')
         
         #transforming all tif images in directory
-        
         image_list = self.getFileNames(dirName)
         for i in image_list:
             newName = i[:-4] + '_transformed.tif'
-            imagei = cv2.imread(i)
+            imagei = io.imread(i)
             rotatedi = np.transpose(imagei, (1, 0, 2))
-            rotatedi = np.flip(rotatedi)
-            rotatedi = np.flip(rotatedi, 0)
-            newi = np.flip(rotatedi)
-            cv2.imwrite(newName, newi)
+            rotatedi = np.flip(rotatedi, 1)
+            newi = np.flip(rotatedi, 1)
+            io.imsave(newName, newi)
         
     def getFileNames(self, root_directory, suffix = '.tif'):
         img_filelist = []
@@ -207,6 +202,31 @@ class filedialog(QWidget):
 
         return img_filelist
         
+    def stack_viewer(currentImage):
+        class IndexTracker(object):
+            def __init__(self, axes, image_stack):
+                self.image_stack = image_stack
+                self.slices, rows, cols  = image_stack.shape
+                self.start_index = self.slices//2
+
+                self.im = axes.imshow(self.image_stack[self.start_index, :, :])
+                self.update()
+
+            def onscroll(self, event):
+                # print("%s %s" % (	event.button, event.step))
+                if event.button == 'up':
+                    self.start_index = (self.start_index + 1) % self.slices
+                else:
+                    self.start_index = (self.start_index - 1) % self.slices
+                self.update()
+
+            def update(self):
+                self.im.set_data(self.image_stack[self.start_index, :, :])
+                axes.set_ylabel('slice %s' % self.start_index)
+                self.im.axes.figure.canvas.draw()
+        
+
+
 class Widget(QWidget):
     def __init__(self, app, parent=None):
         super(Widget, self).__init__(parent=parent)
@@ -217,8 +237,9 @@ class Widget(QWidget):
         
         #adding filedialog class to graphics window
         self.horizontalLayout = QHBoxLayout(self)
-        self.horizontalLayout.addWidget(filedialog(parent=self))        
-        
+        self.horizontalLayout.addWidget(filedialog(parent=self))
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     w = Widget(app)
