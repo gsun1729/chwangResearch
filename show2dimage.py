@@ -16,18 +16,15 @@ from PyQt5.QtWidgets import (QApplication, QHBoxLayout,
                              QVBoxLayout, QWidget)
 
 from PyQt5 import QtWidgets, QtCore, QtGui
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QImage, QColor, qRgb
 import pyqtgraph as pg
-
-
-import matplotlib.pyplot as plt
 
 from numba import jit, prange, njit
 import numpy as np
 
 from pathlib import Path
 import sys
-
+from PIL import Image
 from time import time
 import types
 import os
@@ -35,6 +32,7 @@ from skimage import io
 import scipy.io
 from scipy.stats import iqr
 
+import qimage2ndarray
 
 colors =  {
             'lightest':"#eeeeee",
@@ -94,7 +92,6 @@ QCheckBox{{
     padding:5px;
 }}
 """
-currentImage = io.imread('C:\cygwin64\home\chrhw\Research\dog.tif')
 
 class filedialog(QWidget):
     def __init__(self, parent=None):
@@ -103,95 +100,98 @@ class filedialog(QWidget):
         #setting up a QFileDialog
         self.one = QVBoxLayout(self)
         self.one.setAlignment(Qt.AlignTop)
-        self.buttonOpen = QtWidgets.QPushButton("Click to open a new tif image")
-        self.buttonTransform = QtWidgets.QPushButton("Click to transform shown image and save")
-        self.buttonDirTransform = QtWidgets.QPushButton("Click to transform a whole directory")
-        self.buttonOpen.clicked.connect(self.getFile)
-        self.buttonTransform.clicked.connect(self.transformFile)
-        self.buttonDirTransform.clicked.connect(self.transformDir)
-        self.one.addWidget(self.buttonOpen)
-        self.one.addWidget(self.buttonTransform)
-        self.one.addWidget(self.buttonDirTransform)
+        #adding buttons for interactive choices
+        self.button_getFile = QtWidgets.QPushButton("Click to open a new tif image")
+        self.button_transformFile = QtWidgets.QPushButton("Click to transform shown image and save")
+        self.button_transformDir = QtWidgets.QPushButton("Click to transform a whole directory")
+        self.button_getFile.clicked.connect(self.getFile)
+        self.button_transformFile.clicked.connect(self.transformFile)
+        self.button_transformDir.clicked.connect(self.transformDir)
+        self.one.addWidget(self.button_getFile)
+        self.one.addWidget(self.button_transformFile)
+        self.one.addWidget(self.button_transformDir)
         self.setLayout(self.one)
-        self.buttonOpen.setStyleSheet(QPushButton_style)
-        self.buttonTransform.setStyleSheet(QPushButton_style)
-        self.buttonDirTransform.setStyleSheet(QPushButton_style)
+        self.button_getFile.setStyleSheet(QPushButton_style)
+        self.button_transformFile.setStyleSheet(QPushButton_style)
+        self.button_transformDir.setStyleSheet(QPushButton_style)
         
-        #showing a dog image using plot
+        #showing initial dog image
         #check file location when using this code on different computer!!
-        dogImage = io.imread('C:\cygwin64\home\chrhw\Research\dog.tif')
-        rotatedDog = np.transpose(dogImage, (1, 0, 2))
-        rotatedDog = np.flip(rotatedDog, 1)
-        global currentImage
-        currentImage = rotatedDog
+        dog_image = io.imread('C:\cygwin64\home\chrhw\Research\dog.tif')
+        rotated_dog = np.transpose(dog_image, (1, 0, 2))
+        rotated_dog = np.flip(rotated_dog, 1)
+        self.current_image = rotated_dog
         self.labels = QLabel(self)
-        imageAdded = QPixmap('C:\cygwin64\home\chrhw\Research\dog.tif')
-        self.labels.setPixmap(imageAdded)
+        image_added = QPixmap('C:\cygwin64\home\chrhw\Research\dog.tif')
+        self.labels.setPixmap(image_added)
         self.one.addWidget(self.labels)
 
         
     def getFile(self):
     
         #grabbing file name of user's wanted image
-        openFile = QtGui.QFileDialog.getOpenFileName(self, 'Open Image',
+        open_file = QtGui.QFileDialog.getOpenFileName(self, 'Open Image',
             'c:\\', "Image files (*.tif)")
-        openImage = openFile[0]
+        open_image = open_file[0]
         
         #updating the image on interface to user's choice
-        userImage = io.imread(openImage)
-        rotatedUser = np.transpose(userImage, (1, 0, 2))
-        rotatedUser = np.flip(rotatedUser, 1)
-        global currentImage
-        currentImage = rotatedUser
-        imageAdded1 = QPixmap(openImage)
-        self.labels.setPixmap(imageAdded1)
+        user_image = io.imread(open_image)
+        rotated_user = np.transpose(user_image, (1, 0, 2))
+        rotated_user = np.flip(rotated_user, 1)
+        self.current_image = rotated_user
+        self.slices, self.rows, self.cols = self.current_image.shape
+        self.start_index = self.slices//2
+        self.slice_array = self.current_image[self.start_index, :, :]
+        ##################### TO DO:
+        slice_image = self.toQImage()
+        image_added1 = QPixmap.fromImage(slice_image)
+        self.labels.setPixmap(image_added1)
      
     def transformFile(self):
     
         #making change to user's image
         #change later
-        global currentImage
-        rotatedUser1 = np.flip(currentImage, 1)
-        currentImage = rotatedUser1
+        rotated_user1 = np.flip(self.current_image, 1)
+        self.current_image = rotated_user1
         
         #saving changed image
-        saveFile = QtGui.QFileDialog.getSaveFileName(self, "Save Image",
+        save_file = QtGui.QFileDialog.getSaveFileName(self, "Save Image",
             'c:\\', "Tif Files (*.tif)")
-        saveImage = saveFile[0]
-        io.imsave(saveImage, currentImage)
+        save_image = save_file[0]
+        io.imsave(save_image, self.current_image)
         
         #showing changed user's image
-        rotatedUser1 = np.transpose(rotatedUser1, (1, 0, 2))
-        rotatedUser1 = np.flip(rotatedUser1, 1)
-        imageAdded2 = QPixmap(saveImage)
-        self.labels.setPixmap(imageAdded2)
+        rotated_user1 = np.transpose(rotated_user1, (1, 0, 2))
+        rotated_user1 = np.flip(rotated_user1, 1)
+        image_added2 = QPixmap(save_image)
+        self.labels.setPixmap(image_added2)
         
     def transformDir(self):
     
         #clearing plot image to show original dog
-        dogImage = io.imread('C:\cygwin64\home\chrhw\Research\dog.tif')
-        rotatedDog = np.transpose(dogImage, (1, 0, 2))
-        rotatedDog = np.flip(rotatedDog, 1)
-        global currentImage
-        currentImage = rotatedDog
-        imageAdded3 = QPixmap('C:\cygwin64\home\chrhw\Research\dog.tif')
-        self.labels.setPixmap(imageAdded3)
+        dog_image = io.imread('C:\cygwin64\home\chrhw\Research\dog.tif')
+        rotated_dog = np.transpose(dog_image, (1, 0, 2))
+        rotated_dog = np.flip(rotated_dog, 1)
+        self.current_image = rotated_dog
+        image_added3 = QPixmap('C:\cygwin64\home\chrhw\Research\dog.tif')
+        self.labels.setPixmap(image_added3)
         
         #grabbing directory from user choice
-        dirName = QtGui.QFileDialog.getExistingDirectory(self, "Open Directory",
+        dir_name = QtGui.QFileDialog.getExistingDirectory(self, "Open Directory",
             'c:\\')
         
         #transforming all tif images in directory
-        image_list = self.getFileNames(dirName)
+        image_list = self.getFileNames(dir_name)
         for i in image_list:
-            newName = i[:-4] + '_transformed.tif'
-            imagei = io.imread(i)
-            rotatedi = np.transpose(imagei, (1, 0, 2))
-            rotatedi = np.flip(rotatedi, 1)
-            newi = np.flip(rotatedi, 1)
-            io.imsave(newName, newi)
+            new_name = i[:-4] + '_transformed.tif'
+            image_i = io.imread(i)
+            rotated_i = np.transpose(image_i, (1, 0, 2))
+            rotated_i = np.flip(rotated_i, 1)
+            new_i = np.flip(rotated_i, 1)
+            io.imsave(new_name, new_i)
         
     def getFileNames(self, root_directory, suffix = '.tif'):
+    
         img_filelist = []
         for current_location, sub_directories, files in os.walk(root_directory):
             if files:
@@ -201,32 +201,25 @@ class filedialog(QWidget):
         img_filelist.sort()
 
         return img_filelist
-        
-    def stack_viewer(currentImage):
-        class IndexTracker(object):
-            def __init__(self, axes, image_stack):
-                self.image_stack = image_stack
-                self.slices, rows, cols  = image_stack.shape
-                self.start_index = self.slices//2
-
-                self.im = axes.imshow(self.image_stack[self.start_index, :, :])
-                self.update()
-
-            def onscroll(self, event):
-                # print("%s %s" % (	event.button, event.step))
-                if event.button == 'up':
-                    self.start_index = (self.start_index + 1) % self.slices
-                else:
-                    self.start_index = (self.start_index - 1) % self.slices
-                self.update()
-
-            def update(self):
-                self.im.set_data(self.image_stack[self.start_index, :, :])
-                axes.set_ylabel('slice %s' % self.start_index)
-                self.im.axes.figure.canvas.draw()
-        
-
-
+    
+    def wheelEvent(self, event):
+    
+        if (event.angleDelta() > 0):
+            self.start_index = (self.start_index + 1) % self.slices
+        elif (event.angleDelta() < 0):
+            self.start_index = (self.start_index - 1) % self.slices
+        updateSlice()
+    
+    def updateSlice(self):
+    
+        self.slice_array = self.current_image[self.start_index, :, :]
+        new_slice = toQImage()
+        image_added4 = QPixmap.fromImage(new_slice)
+        self.labels.setPixmap(image_added4)
+    
+    def toQImage(self):
+        slice_QImage = qimage2ndarray.array2qimage(self.slice_array)
+    
 class Widget(QWidget):
     def __init__(self, app, parent=None):
         super(Widget, self).__init__(parent=parent)
