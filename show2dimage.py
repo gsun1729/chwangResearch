@@ -114,6 +114,9 @@ class filedialog(QWidget):
         self.button_getFile.setStyleSheet(QPushButton_style)
         self.button_transformFile.setStyleSheet(QPushButton_style)
         self.button_transformDir.setStyleSheet(QPushButton_style)
+        self.slice_number = QLabel()
+        self.slice_number.setStyleSheet(QLabel_style)
+        self.one.addWidget(self.slice_number)
         
         #showing initial dog image
         #check file location when using this code on different computer!!
@@ -135,17 +138,17 @@ class filedialog(QWidget):
         open_image = open_file[0]
         
         #updating the image on interface to user's choice
-        user_image = io.imread(open_image)
-        rotated_user = np.transpose(user_image, (1, 0, 2))
+        self.user_image = io.imread(open_image)
+        rotated_user = np.transpose(self.user_image, (1, 0, 2))
         rotated_user = np.flip(rotated_user, 1)
         self.current_image = rotated_user
-        self.slices, self.rows, self.cols = self.current_image.shape
+        self.slices, self.rows, self.cols = self.user_image.shape
         self.start_index = self.slices//2
-        self.slice_array = self.current_image[self.start_index, :, :]
-        ##################### TO DO:
+        self.slice_array = self.user_image[self.start_index, :, :]
         slice_image = self.toQImage()
         image_added1 = QPixmap.fromImage(slice_image)
         self.labels.setPixmap(image_added1)
+        self.slice_number.setText("slice %s" % self.start_index)
      
     def transformFile(self):
     
@@ -175,6 +178,7 @@ class filedialog(QWidget):
         self.current_image = rotated_dog
         image_added3 = QPixmap('C:\cygwin64\home\chrhw\Research\dog.tif')
         self.labels.setPixmap(image_added3)
+        self.slice_number.clear()
         
         #grabbing directory from user choice
         dir_name = QtGui.QFileDialog.getExistingDirectory(self, "Open Directory",
@@ -204,21 +208,23 @@ class filedialog(QWidget):
     
     def wheelEvent(self, event):
     
-        if (event.angleDelta() > 0):
+        if (event.angleDelta().y() > 0):
             self.start_index = (self.start_index + 1) % self.slices
-        elif (event.angleDelta() < 0):
+        elif (event.angleDelta().y() < 0):
             self.start_index = (self.start_index - 1) % self.slices
-        updateSlice()
+        self.updateSlice()
     
     def updateSlice(self):
     
-        self.slice_array = self.current_image[self.start_index, :, :]
-        new_slice = toQImage()
+        self.slice_array = self.user_image[self.start_index, :, :]
+        new_slice = self.toQImage()
         image_added4 = QPixmap.fromImage(new_slice)
         self.labels.setPixmap(image_added4)
+        self.slice_number.setText("slice %s" % self.start_index)
     
     def toQImage(self):
         slice_QImage = qimage2ndarray.array2qimage(self.slice_array)
+        return slice_QImage
     
 class Widget(QWidget):
     def __init__(self, app, parent=None):
