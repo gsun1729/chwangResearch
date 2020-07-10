@@ -131,19 +131,35 @@ class filedialog(QWidget):
 
         
     def getFile(self):
+        '''
+        This function utilizes QFileDialog to open up a tif image of user's choice
+        and displays it on the interface.
+        Through QFileDialog, this function grabs the user's choice of file name
+        and uses functions toQImage and other built-ins to display the associated image on the interface.
     
+        Parameters
+        ===========
+        self: instance of class
+        
+        Outputs
+        ===========
+        Displays user's choice of tif file on interface
+        No returns
+        '''
         #grabbing file name of user's wanted image
         open_file = QtGui.QFileDialog.getOpenFileName(self, 'Open Image',
             'c:\\', "Image files (*.tif)")
         open_image = open_file[0]
         
-        #updating the image on interface to user's choice
+        #updating self.current_image to user's choice
         self.user_image = io.imread(open_image)
         rotated_user = np.transpose(self.user_image, (1, 0, 2))
         rotated_user = np.flip(rotated_user, 1)
         self.current_image = rotated_user
+        #grabbing slice info
         self.slices, self.rows, self.cols = self.user_image.shape
         self.start_index = self.slices//2
+        #displaying a single slice at self.start_index
         self.slice_array = self.user_image[self.start_index, :, :]
         slice_image = self.toQImage()
         image_added1 = QPixmap.fromImage(slice_image)
@@ -151,9 +167,22 @@ class filedialog(QWidget):
         self.slice_number.setText("slice %s" % self.start_index)
      
     def transformFile(self):
+        '''
+        This function rotates the current image shown on the interface by 90 degrees 
+        and utilizes QFileDialog to save the image under user's choice of file name.
+        The transformed image is displayed on the interface.
     
+        Parameters
+        ===========
+        self: instance of class
+        
+        Outputs
+        ===========
+        Writes to file the transformed image
+        No returns
+        '''
         #making change to user's image
-        #change later
+        #change later (TRANSFORM)
         rotated_user1 = np.flip(self.current_image, 1)
         self.current_image = rotated_user1
         
@@ -170,8 +199,23 @@ class filedialog(QWidget):
         self.labels.setPixmap(image_added2)
         
     def transformDir(self):
+        '''
+        This function displays the original dog image,
+        grabs user's choice of directory through QFileDialog,
+        and transforms all tif images in that directory, writing them to file with the tag "_transformed.tif."
+        Function getFileNames is used to get all file names in chosen directory.
+        Here, transforming an image is rotating the image by 90 degrees.
     
-        #clearing plot image to show original dog
+        Parameters
+        ===========
+        self: instance of class
+        
+        Outputs
+        ===========
+        Writes to file all transformed images with the tag "_transformed.tif"
+        No returns
+        '''
+        #showing original dog image
         dog_image = io.imread('C:\cygwin64\home\chrhw\Research\dog.tif')
         rotated_dog = np.transpose(dog_image, (1, 0, 2))
         rotated_dog = np.flip(rotated_dog, 1)
@@ -195,7 +239,20 @@ class filedialog(QWidget):
             io.imsave(new_name, new_i)
         
     def getFileNames(self, root_directory, suffix = '.tif'):
+        '''
+        This function grabs all tif file names in a given directory
+        and makes and returns a list of the names.
     
+        Parameters
+        ===========
+        self: instance of class
+        root_directory: directory of choice
+        suffix = '.tif': suffix of file names wanted is '.tif'
+        
+        Outputs
+        ===========
+        Returns img_filelist: list of file names with suffix = '.tif' in given directory
+        '''
         img_filelist = []
         for current_location, sub_directories, files in os.walk(root_directory):
             if files:
@@ -207,7 +264,20 @@ class filedialog(QWidget):
         return img_filelist
     
     def wheelEvent(self, event):
+        '''
+        This function redirects wheelEvent so when wheel is rotated up, function updateSlice is called to increase the slice viewed, and
+        when wheel is rotated down, function updateSlice is called to decrease the slice viewed.
     
+        Parameters
+        ===========
+        self: instance of class
+        event: wheel event
+        
+        Outputs
+        ===========
+        Calls function updateSlice with appropriate slice number
+        No returns
+        '''
         if (event.angleDelta().y() > 0):
             self.start_index = (self.start_index + 1) % self.slices
         elif (event.angleDelta().y() < 0):
@@ -215,7 +285,18 @@ class filedialog(QWidget):
         self.updateSlice()
     
     def updateSlice(self):
-    
+        '''
+        This function updates the slice viewed on the interface depending on the index provided by self.
+        
+        Parameters
+        ===========
+        self: instance of class
+        
+        Outputs
+        ===========
+        Displays appropriate slice on the interface
+        No returns
+        '''
         self.slice_array = self.user_image[self.start_index, :, :]
         new_slice = self.toQImage()
         image_added4 = QPixmap.fromImage(new_slice)
@@ -223,6 +304,17 @@ class filedialog(QWidget):
         self.slice_number.setText("slice %s" % self.start_index)
     
     def toQImage(self):
+        '''
+        This function utilizes qimage2ndarray to transform a slice array to a QImage.
+    
+        Parameters
+        ===========
+        self: instance of class
+        
+        Outputs
+        ===========
+        Returns slice_QImage: QImage made from slice array at self.slice_array
+        '''
         slice_QImage = qimage2ndarray.array2qimage(self.slice_array)
         return slice_QImage
     
